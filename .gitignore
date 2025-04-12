@@ -1,0 +1,5 @@
+.vscode/
+data/
+experiments/trained/
+images/
+venv/

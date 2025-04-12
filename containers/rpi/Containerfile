@@ -1,0 +1,20 @@
+# Container file for building a bootable container (bootc) for Raspberry Pi 4
+
+FROM quay.io/fedora/fedora-bootc:latest
+
+RUN dnf -y install cockpit cockpit-ws cockpit-podman git vim-enhanced tree && dnf clean all && systemctl enable cockpit.socket
+
+COPY etc etc
+
+ARG sshpubkey
+
+RUN if test -z "$sshpubkey"; then echo "must provide sshpubkey"; exit 1; fi; \
+    useradd -G wheel core && \
+    mkdir -m 0700 -p /home/core/.ssh && \
+    echo $sshpubkey > /home/core/.ssh/authorized_keys && \
+    chmod 0600 /home/core/.ssh/authorized_keys && \
+    chown -R core: /home/core
+
+RUN set -eu; mkdir -p /usr/ssh && \
+    echo 'AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2' >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
+    echo ${sshpubkey} > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys

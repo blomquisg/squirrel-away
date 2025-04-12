@@ -1,0 +1,10 @@
+[Unit]
+Description=PIR Motion Socket Activation
+Before=pir_motion.service
+
+[Socket]
+ListenStream=/tmp/pir_motion.sock
+SocketMode=0666
+
+[Install]
+WantedBy=sockets.target
