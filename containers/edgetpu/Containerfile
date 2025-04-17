@@ -1,0 +1,33 @@
+# Coral's docs indicate compatibility issues with newer versions of Ubuntu.
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system packages, including Python 3.10 and pip
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    curl \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 and pip3 to point to Python 3.10
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+
+# Create working directory
+WORKDIR /app
+
+# Download and install pycoral and tflite_runtime wheels.
+# Google has not updated releases for pycoral in some time.  
+# Github user oberluz hosted updated wheels for pycoral and tflite_runtime.
+# https://github.com/google-coral/pycoral/issues/85#issuecomment-1791548930
+RUN curl -LO https://github.com/oberluz/pycoral/releases/download/2.7.0/pycoral-2.7.0-cp310-cp310-linux_x86_64.whl \
+    && curl -LO https://github.com/oberluz/pycoral/releases/download/2.7.0/tflite_runtime-2.7.0-cp310-cp310-linux_x86_64.whl \
+    && pip install --no-cache-dir tflite_runtime-2.7.0-cp310-cp310-linux_x86_64.whl pycoral-2.7.0-cp310-cp310-linux_x86_64.whl \
+    && rm -f *.whl
+
+# Set default shell
+CMD [ "bash" ]
