@@ -10,29 +10,29 @@ import datetime
 import os
 
 import config as cfg
-import model
+import dataset as ds
 
 config = cfg.Config()
 
 ## training data loader definition
-train_loader = model.dataset_loader(f"{config.data_dir}", model.DatasetType.Train).dataloader
+train_loader = ds.dataset_loader(f"{config.data_dir}", ds.DatasetType.Train).dataloader
 
 ## trainer
 
 num_classes = 2  # squirrel or not squirrel
 num_epochs  = 15 # run the data 15 times
 
-model = models.mobilenet_v2(pretrained=True)
+dataset = models.mobilenet_v2(pretrained=True)
 
-model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
+dataset.classifier[1] = nn.Linear(dataset.classifier[1].in_features, num_classes)
 
 # Freeze base layers of the model
-for param in model.features.parameters():
+for param in dataset.features.parameters():
     param.requires_grad = False
 
 # Binary classification:  squirrel or no-squirrel
 criterion  = nn.CrossEntropyLoss() 
-optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
+optimizer = optim.Adam(dataset.classifier.parameters(), lr=0.001)
 training_results = ""
 
 for epoch in range(num_epochs):
@@ -42,7 +42,7 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # forward prop
-        outputs = model(inputs)
+        outputs = dataset(inputs)
         loss = criterion(outputs, labels)
 
         # backward prop
@@ -57,13 +57,13 @@ for epoch in range(num_epochs):
 
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-experiment_dir = f"{config.experiments_dir}/trained_{timestamp}"
+experiment_dir = os.path.expanduser(f"{config.experiments_dir}/trained_{timestamp}")
 os.mkdir(experiment_dir)
 model_filename  = f"{experiment_dir}/model"
 training_results_filename = f"{experiment_dir}/training_results"
 
 # save the trained model
-torch.save(model.state_dict(), model_filename)
+torch.save(dataset.state_dict(), model_filename)
 config.logger.debug(f"Model saved to {model_filename}")
 
 # save the epoch output 

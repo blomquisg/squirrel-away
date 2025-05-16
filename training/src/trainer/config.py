@@ -1,16 +1,19 @@
 import os
-import configparser
+from configparser import ConfigParser, ExtendedInterpolation
 import logging
 import sys
 import contextlib
+from pathlib import Path
 
 class Config:
-    def __init__(self, env=None, config_file="config/config.ini"):
+    def __init__(self, env=None):
         if env is None:
             env = os.getenv("ENVIRONMENT", "dev")
 
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file)
+        self.config = ConfigParser(interpolation=ExtendedInterpolation())
+
+        config_path = Path(__file__).resolve().parents[2] / "config" / "config.ini"
+        self.config.read(config_path)    
 
         self.env = env
         self._load_settings()

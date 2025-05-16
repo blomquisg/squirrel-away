@@ -17,6 +17,9 @@ class DatasetLoader():
         self.dataset = dataset
         self.dataloader = dataloader
 
+    def __str__(self):
+        return f"dataset: {self.dataset}, dataloader: {self.dataloader}"
+
 def dataset_loader(data_dir, dataset_type=DatasetType.Train, batch_size=32, shuffle=True, num_workers=4):
     transform = transforms.Compose([
     transforms.Resize((224, 224)),      # size that the model expects
@@ -43,6 +46,7 @@ def main():
     data_dir = config.data_dir
     dataset_type = DatasetType.Train
     loader = dataset_loader(data_dir, dataset_type, 16, False, 2)
+    print(f"dataset loader:  {loader}")
 
 if __name__ == "__main__":
     main()

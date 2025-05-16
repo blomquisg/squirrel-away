@@ -11,14 +11,14 @@ import datetime
 import logging
 
 import config
-import model
+import dataset
 
 config = config.Config()
 
 ## Validation dataset
 batch_size = 16
 
-dataset_loader = model.dataset_loader(config.data_dir, model.DatasetType.Validation, batch_size, False)
+dataset_loader = dataset.dataset_loader(config.data_dir, dataset.DatasetType.Validation, batch_size, False)
 val_loader = dataset_loader.dataloader
 val_dataset = dataset_loader.dataset
 
@@ -35,11 +35,11 @@ confusion_matrix_file = f"{trained_model_dir}/confusion_matrix_{validation_times
 # trained model file
 model_path = f"{trained_model_dir}/model" 
 device = torch.device("cudu" if torch.cuda.is_available() else "cpu")
-model = models.mobilenet_v2()
-model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
-model.load_state_dict(torch.load(model_path, map_location=device))
-model.to(device)
-model.eval()
+dataset = models.mobilenet_v2()
+dataset.classifier[1] = nn.Linear(dataset.classifier[1].in_features, num_classes)
+dataset.load_state_dict(torch.load(model_path, map_location=device))
+dataset.to(device)
+dataset.eval()
 
 # tally results
 correct    = 0
@@ -54,7 +54,7 @@ class_names = val_dataset.classes
 for images, labels in val_loader:
     images, labels = images.to(device), labels.to(device)
     with torch.no_grad():
-        outputs = model(images)
+        outputs = dataset(images)
         _, predicted = torch.max(outputs, 1)
 
     correct += (predicted == labels).sum().item()
