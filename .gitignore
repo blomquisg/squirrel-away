@@ -3,3 +3,9 @@ data/
 experiments/trained/
 images/
 venv/
+training/build
+training/**/*egg*/**
+training/**/*pycache*/**
+inferencing/build
+inferencing/**/*egg*/**
+inferencing/**/*pycache*/**
