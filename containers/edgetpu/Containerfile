@@ -8,17 +8,59 @@ RUN apt-get update && apt-get install -y \
     python3.10 \
     python3.10-venv \
     python3.10-distutils \
+    vim \
+    less \
+    gnupg \
     curl \
-    wget \
+    file \
     ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# REMOVE: Debugging
+# Debugging tools that should not be kept around
+RUN apt-get update && apt-get install -y \
+    usbutils \
+    hwinfo \
+    strace \
+    ltrace \
+    binutils \
+    wget \
+    gdb \
+    git \
+    g++ \
+    make \    
+    && rm -rf /var/lib/apt/lists/*
+
+# REMOVE: Debugging
+# Install bazel
+RUN curl https://bazel.build/bazel-release.pub.gpg | apt-key add - \
+    && echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" > /etc/apt/sources.list.d/bazel.list \
+    && apt-get update \
+    && apt-get install -y bazel
+
+# Install the libedgetpu library
+RUN echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" > /etc/apt/sources.list.d/coral-edgetpu.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+    && apt-get update \
+    && apt-get install -y libedgetpu1-std \
     && rm -rf /var/lib/apt/lists/*
 
 # Set python3 and pip3 to point to Python 3.10
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
+
+RUN mkdir -p /app/src 
+COPY files/ /app/
+
+WORKDIR /app/src
+
+RUN git clone https://github.com/google-coral/libedgetpu
+
+
 # Create working directory
 WORKDIR /app
+
 
 # Download and install pycoral and tflite_runtime wheels.
 # Google has not updated releases for pycoral in some time.  
