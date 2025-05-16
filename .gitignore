@@ -1,5 +1,6 @@
 .vscode/
 data/
+trash/
 experiments/trained/
 images/
 venv/
