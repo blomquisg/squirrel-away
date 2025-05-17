@@ -10,3 +10,4 @@ training/**/*pycache*/**
 inferencing/build
 inferencing/**/*egg*/**
 inferencing/**/*pycache*/**
+containers/rpi/var/lib/edgetpu/lib/libedgetpu*
