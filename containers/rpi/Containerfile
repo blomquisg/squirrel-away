@@ -19,6 +19,6 @@ RUN set -eu; mkdir -p /usr/ssh && \
     echo 'AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2' >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
     echo "${sshpubkey}" > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
 
-# Copy the aarch64 libedgetpu.so file to ./var/lib/edgetpu/lib/
+# Copy the aarch64 libedgetpu.so file to ./usr/lib/
 # This will be available to the inferencing code
-COPY var/ /var/
+COPY usr usr
