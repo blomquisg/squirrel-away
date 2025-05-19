@@ -2,7 +2,10 @@
 
 FROM quay.io/fedora/fedora-bootc:latest
 
-RUN dnf -y install cockpit cockpit-ws cockpit-podman git vim-enhanced tree && dnf clean all && systemctl enable cockpit.socket
+RUN dnf -y install cockpit cockpit-ws cockpit-podman \
+                   git vim-enhanced tree pip python3 && \
+    dnf clean all && \
+    systemctl enable cockpit.socket
 
 COPY etc etc
 
@@ -19,6 +22,8 @@ RUN set -eu; mkdir -p /usr/ssh && \
     echo 'AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2' >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
     echo "${sshpubkey}" > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
 
-# Copy the aarch64 libedgetpu.so file to ./usr/lib/
+# Copy the aarch64 libedgetpu.so file to ./usr/lib/edgetpu/
 # This will be available to the inferencing code
-COPY usr usr
+COPY usr/lib/edgetpu/libedgetpu.so.1 /usr/lib/edgetpu/libedgetpu.so.1
+COPY files/testdata /root/squirrel-away/testdata
+
