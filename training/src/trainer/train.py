@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 
 import datetime
 import os
+import tempfile
 
 import config as cfg
 import dataset as ds
@@ -57,7 +58,8 @@ for epoch in range(num_epochs):
 
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-experiment_dir = os.path.expanduser(f"{config.experiments_dir}/trained_{timestamp}")
+trained_dir = os.path.expanduser(f"{config.experiments_dir}/trained")
+experiment_dir = f"{trained_dir}/{timestamp}"
 os.mkdir(experiment_dir)
 model_filename  = f"{experiment_dir}/model"
 training_results_filename = f"{experiment_dir}/training_results"
@@ -65,6 +67,15 @@ training_results_filename = f"{experiment_dir}/training_results"
 # save the trained model
 torch.save(dataset.state_dict(), model_filename)
 config.logger.debug(f"Model saved to {model_filename}")
+
+# os.symlink can't replace links, so do the swap-eroo
+def _update_symlink(target, link):
+    temp_link = tempfile.mktemp(prefix=link + "_tmp")
+    os.symlink(target, temp_link)
+    os.replace(temp_link, link)
+
+# update "latest" symlink
+_update_symlink(experiment_dir, f"{trained_dir}/latest")
 
 # save the epoch output 
 with open(training_results_filename, "w") as epoch_file:
