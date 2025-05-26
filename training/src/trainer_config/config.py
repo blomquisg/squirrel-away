@@ -13,7 +13,7 @@ class Config:
         self.config = ConfigParser(interpolation=ExtendedInterpolation())
 
         config_path = Path(__file__).resolve().parents[2] / "config" / "config.ini"
-        self.config.read(config_path)    
+        self.config.read(config_path)
 
         self.env = env
         self._load_settings()
@@ -37,7 +37,10 @@ class Config:
         self.log_stdout = self._get_config("log_stdout")    
 
     def _get_config(self, config_name):
-        return self.config.get(self.env, config_name, fallback=self.config.get("default", config_name))
+        config_value = self.config.get(self.env, config_name, fallback=self.config.get("default", config_name))
+        # some config values are paths and may use tilde (~) as a homedir short cut ... expand that as a convenience
+        config_value = os.path.expanduser(config_value)
+        return config_value
     
     def _create_logger(self):
         self.logger = logging.getLogger(__name__)

@@ -3,7 +3,7 @@ from enum import Enum
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-import config as cfg
+from trainer_config import config as cfg
 
 config = cfg.Config()
 

@@ -10,21 +10,21 @@ import datetime
 import os
 import tempfile
 
-import config as cfg
-import dataset as ds
+from trainer_config import config as cfg
+import trainer.dataset as ds
 
 config = cfg.Config()
 
 ## training data loader definition
 train_loader = ds.dataset_loader(f"{config.data_dir}", ds.DatasetType.Train).dataloader
 
-## trainer
-
 num_classes = 2  # squirrel or not squirrel
 num_epochs  = 15 # run the data 15 times
 
+# import the pre-trained classification model
 dataset = models.mobilenet_v2(pretrained=True)
 
+# add a layer to make the model only classify squirrels and non-squirrels
 dataset.classifier[1] = nn.Linear(dataset.classifier[1].in_features, num_classes)
 
 # Freeze base layers of the model
@@ -58,7 +58,7 @@ for epoch in range(num_epochs):
 
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-trained_dir = os.path.expanduser(f"{config.experiments_dir}/trained")
+trained_dir = f"{config.experiments_dir}/trained"
 experiment_dir = f"{trained_dir}/{timestamp}"
 os.mkdir(experiment_dir)
 model_filename  = f"{experiment_dir}/model"
@@ -81,4 +81,3 @@ _update_symlink(experiment_dir, f"{trained_dir}/latest")
 with open(training_results_filename, "w") as epoch_file:
     epoch_file.write(training_results)
 config.logger.debug(f"Training results saved to {training_results_filename}")
-
