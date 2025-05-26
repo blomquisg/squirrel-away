@@ -5,9 +5,11 @@ experiments/trained/
 images/
 venv*/
 training/build
+training/dist
 training/**/*egg*/**
 training/**/*pycache*/**
 inferencing/build
+inferencing/dist
 inferencing/**/*egg*/**
 inferencing/**/*pycache*/**
 containers/rpi/usr/lib/edgetpu/libedgetpu*
