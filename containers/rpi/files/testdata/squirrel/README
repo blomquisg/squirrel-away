@@ -1,0 +1,5 @@
+# Inferencing testing data
+
+Place image (*.jpg, *.jpeg, *.png) files here that do contain squirrels.
+The Squirrel Detector will use this directory as part of its inferencing
+logic.

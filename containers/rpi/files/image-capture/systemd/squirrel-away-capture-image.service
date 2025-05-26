@@ -1,0 +1,6 @@
+[Unit]
+Description=Capture images for squirrel-away image inferencing to determine if a squirrel is present
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/squirrel-away-image-capture.sh

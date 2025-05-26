@@ -12,6 +12,11 @@ inferencing/build
 inferencing/dist
 inferencing/**/*egg*/**
 inferencing/**/*pycache*/**
+# The shared object file needs to be built and put in place manually
 containers/rpi/usr/lib/edgetpu/libedgetpu*
-# create this symlink when downloading training/test data
-containers/rpi/files/testdata
+# Ignore any data used for testing inferencing on the RPi
+containers/rpi/files/testdata/**/*.jpg
+containers/rpi/files/testdata/**/*.jpeg
+containers/rpi/files/testdata/**/*.png
+# The model should be trained and placed into this directory manually
+containers/rpi/files/model/*

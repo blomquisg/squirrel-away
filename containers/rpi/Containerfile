@@ -1,29 +1,55 @@
 # Container file for building a bootable container (bootc) for Raspberry Pi 4
 
-FROM quay.io/fedora/fedora-bootc:latest
+FROM --platform=linux/arm64 quay.io/fedora/fedora-bootc:latest
 
-RUN dnf -y install cockpit cockpit-ws cockpit-podman \
-                   git vim-enhanced tree pip python3 && \
-    dnf clean all && \
-    systemctl enable cockpit.socket
+# Try to make podman builds faster with some dnf tuning
+ENV DNF_YUM_PLUGINS=0 \
+    DNF_DISABLE_REPOS_CACHE=1 \
+    DNF_AUTOMATIC_CACHE_CLEANUP=1 \
+    DNF_FASTESTMIRROR=1 \
+    DNF_NO_TIMER=1
 
-COPY etc etc
+# More dnf tuning, plus installing all the packages needed on the RPi
+RUN echo -e "[main]\ninstall_weak_dependencies=False\ntsflags=nodocs\nskip_if_unavailable=True" \
+      > /etc/dnf/dnf.conf && \
+    dnf -y makecache && \
+    dnf -y install \
+               cockpit cockpit-ws cockpit-podman usbutils \
+               git vim-enhanced tree pip python3 \
+               libcamera libcamera-devel \
+               libcamera-apps libjpeg-turbo-devel \
+               && \
+    dnf clean all
 
 ARG sshpubkey
 
+# The useradd below doesn't seem to work ... <sad-trombone>
 RUN if test -z "$sshpubkey"; then echo "must provide sshpubkey"; exit 1; fi; \
     useradd -G wheel core && \
     mkdir -m 0700 -p /home/core/.ssh && \
     echo $sshpubkey > /home/core/.ssh/authorized_keys && \
     chmod 0600 /home/core/.ssh/authorized_keys && \
-    chown -R core: /home/core
-
-RUN set -eu; mkdir -p /usr/ssh && \
-    echo 'AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2' >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
+    chown -R core: /home/core && \
+    systemctl enable cockpit.socket && \
+    systemctl mask systemd-remount-fs.service && \
+    set -eu; mkdir -p /usr/ssh && \
+    echo 'AuthorizedKeysFile /usr/ssh/%u.keys .ssh/authorized_keys .ssh/authorized_keys2' \
+         >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
     echo "${sshpubkey}" > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
 
-# Copy the aarch64 libedgetpu.so file to ./usr/lib/edgetpu/
-# This will be available to the inferencing code
+# Nothing being copied here ...
+COPY etc etc
+# Enables the Coral Edge TPU
 COPY usr/lib/edgetpu/libedgetpu.so.1 /usr/lib/edgetpu/libedgetpu.so.1
-COPY files/testdata /root/squirrel-away/testdata
-
+# The inferencing model used to determine if a picture contains a squirrel
+# Note that the model needs to be manually copied to the source directory
+COPY files/model/model.tflite /usr/share/squirrel-away/model.tflite
+# Image capture script
+COPY files/image-capture/script/squirrel-away-image-capture.sh /usr/local/bin/squirrel-away-image-capture.sh
+RUN chmod +x /usr/local/bin/squirrel-away-image-capture.sh
+# Image capture unit file and timer ... enable the timer when this is all ready
+COPY files/image-capture/systemd/* /etc/systemd/system/
+# RUN systemd enable squirrel-away-capture-image.timer
+# Some test data for testing inferencing on the RPi
+# Note the test data directory needs to be manually copied to the source directory
+COPY files/data /usr/share/squirrel-away/testdata
