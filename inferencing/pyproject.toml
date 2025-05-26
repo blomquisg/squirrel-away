@@ -4,9 +4,9 @@ version = "0.0.1"
 description = "AI-based squirrel detection"
 authors = [{ name="Greg Blomquist", email="blomquisg@gmail.com"}]
 dependencies = [
-    "tflite-runtime",
     "numpy",
-    "pycoral"
+    "tensorflow-cpu",
+    "ai-edge-litert",
 ]
 requires-python = ">=3.8"
 
