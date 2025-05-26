@@ -3,7 +3,7 @@ data/
 trash/
 experiments/trained/
 images/
-venv/
+venv*/
 training/build
 training/**/*egg*/**
 training/**/*pycache*/**
