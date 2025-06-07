@@ -1,0 +1,6 @@
+[Unit]
+Description=Clean up old squirrel-away images that do not contain squirrels
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemd-tmpfiles --clean squirrel-away-inference-cleanup.conf

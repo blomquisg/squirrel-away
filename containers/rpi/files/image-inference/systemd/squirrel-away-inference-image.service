@@ -1,0 +1,8 @@
+[Unit]
+Description=Run inferencing against any new images to determine if a squirrel is present.
+Requires=squirrel-away-inference-image.path
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=systemctl start squirrel-away-detector.container

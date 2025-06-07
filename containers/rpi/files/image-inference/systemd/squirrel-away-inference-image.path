@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch squirrel-away image capture directory for new images.
+
+[Path]
+DirectoryNotEmpty=/var/lib/squirrel-away/inference/input/
+MakeDirectory=true
+
+[Install]
+WantedBy=default.target

@@ -4,7 +4,7 @@ Description=Run squirrel-away image capture every minute between 6am and 9pm
 [Timer]
 OnCalendar=*-*-* 06..20:00/1
 Persistent=True
-Unit=squirrel-away-image-capture.service
+Unit=squirrel-away-capture-image.service
 
 [Install]
 WantedBy=timers.target

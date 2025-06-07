@@ -1,0 +1,11 @@
+[Unit]
+Description=Squirrel Detector Inferencing Container
+
+[Container]
+Image=quay.io/blomqusig/squirrel-away-detector:latest
+Mount=type=bind,source=/var/lib/squirrel-away/inference,destination=/var/lib/squirrel-away/inference,relabel=shared
+Mount=type=bind,source=/usr/lib/edgetpu/libedgetpu.so.1,destination=/usr/lib/edgetpu/libedgetpu.so.1,ro=true
+Device=/dev/bus/usb
+Environment=PYTHONUNBUFFERED=1
+Environment=SQUIRREL_AWAY_ENV=PRODUCTION
+Exec=squirrel-away-detector /var/lib/squirrel-away/inference/input/

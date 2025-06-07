@@ -2,28 +2,18 @@
 
 FROM --platform=linux/arm64 quay.io/fedora/fedora-bootc:latest
 
-# Try to make podman builds faster with some dnf tuning
-ENV DNF_YUM_PLUGINS=0 \
-    DNF_DISABLE_REPOS_CACHE=1 \
-    DNF_AUTOMATIC_CACHE_CLEANUP=1 \
-    DNF_FASTESTMIRROR=1 \
-    DNF_NO_TIMER=1
-
 # More dnf tuning, plus installing all the packages needed on the RPi
-RUN echo -e "[main]\ninstall_weak_dependencies=False\ntsflags=nodocs\nskip_if_unavailable=True" \
-      > /etc/dnf/dnf.conf && \
-    dnf -y makecache && \
-    dnf -y install \
-               cockpit cockpit-ws cockpit-podman usbutils \
-               git vim-enhanced tree pip python3 \
-               libcamera libcamera-devel \
-               libcamera-apps libjpeg-turbo-devel \
-               && \
+RUN dnf -y install \
+       cockpit cockpit-ws cockpit-podman usbutils \
+       git vim-enhanced tree \
+       v4l-utils ffmpeg mpv \
+       && \
     dnf clean all
 
 ARG sshpubkey
 
 # The useradd below doesn't seem to work ... <sad-trombone>
+# This also sets up some necessary directories under /var/lib/squirrel-away
 RUN if test -z "$sshpubkey"; then echo "must provide sshpubkey"; exit 1; fi; \
     useradd -G wheel core && \
     mkdir -m 0700 -p /home/core/.ssh && \
@@ -37,19 +27,38 @@ RUN if test -z "$sshpubkey"; then echo "must provide sshpubkey"; exit 1; fi; \
          >> /etc/ssh/sshd_config.d/30-auth-system.conf && \
     echo "${sshpubkey}" > /usr/ssh/root.keys && chmod 0600 /usr/ssh/root.keys
 
-# Nothing being copied here ...
-COPY etc etc
 # Enables the Coral Edge TPU
-COPY usr/lib/edgetpu/libedgetpu.so.1 /usr/lib/edgetpu/libedgetpu.so.1
-# The inferencing model used to determine if a picture contains a squirrel
-# Note that the model needs to be manually copied to the source directory
-COPY files/model/model.tflite /usr/share/squirrel-away/model.tflite
+# TODO: Add RUN command to make sure libedgetpu.so.1 file exists and include build instrutions if not
+# TODO :: Can this be moved to the inferencing container?
+COPY files/image-inference/usr/lib/edgetpu/libedgetpu.so.1 /usr/lib/edgetpu/libedgetpu.so.1
+
 # Image capture script
 COPY files/image-capture/script/squirrel-away-image-capture.sh /usr/local/bin/squirrel-away-image-capture.sh
 RUN chmod +x /usr/local/bin/squirrel-away-image-capture.sh
+
+# tmpfiles definition for cleaning images that are more than an hour old
+# The squirrel-away-inference-cleanup.timer calls this tmpfile cleanup every hour
+COPY files/image-inference/tmpfiles/* /etc/tmpfiles.d/
+
 # Image capture unit file and timer ... enable the timer when this is all ready
 COPY files/image-capture/systemd/* /etc/systemd/system/
-# RUN systemd enable squirrel-away-capture-image.timer
+
+# Image inferencing unit file, path watcher, and old image cleanup
+COPY files/image-inference/systemd/* /etc/systemd/system/
+
+# Enable necessary units (doesn't seem to work ?)
+RUN systemctl enable squirrel-away-inference-image.path && \
+    systemctl enable squirrel-away-inference-cleanup.timer && \
+    systemctl enable squirrel-away-capture-image.timer
+
+# Setup the squirrel-away-detector quadlet
+COPY files/image-inference/quadlet/squirrel-away-detector.container /etc/containers/systemd/
+
+# Directories needed by squirrel-away-detector
+RUN mkdir -p /var/lib/squirrel-away/inference/{keep,garbage,input}
+
 # Some test data for testing inferencing on the RPi
 # Note the test data directory needs to be manually copied to the source directory
-COPY files/data /usr/share/squirrel-away/testdata
+# TODO :: MOVE TO INFERENCING CONTAINER
+# TODO :: DELETE
+COPY files/testdata /usr/share/squirrel-away/testdata

@@ -10,4 +10,5 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 FILENAME="$TIMESTAMP.jpg"
 
 # Capture a single image and write it out
-libcamera-still --output "$DESTINATION_DIR/$FILENAME" --timeout 1 --nopreview
+# libcamera-still --output "$DESTINATION_DIR/$FILENAME" --timeout 1 --nopreview
+ffmpeg -f v4l2 -i /dev/video0 -frames:v 1 -update 1 "$DESTINATION_DIR/$FILENAME"
