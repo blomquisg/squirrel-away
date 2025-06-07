@@ -1,0 +1,25 @@
+FROM --platform=linux/arm64 registry.fedoraproject.org/fedora:42
+
+ENV PYTHONUNBUFFERED=1 SQUIRREL_AWAY_ENV=PRODUCTION
+
+RUN dnf -y install \
+        python3.11 python3.11-devel \
+        libusb1 \
+        gcc \
+        systemd \
+    && dnf clean all
+
+# The inferencing model used to determine if a picture contains a squirrel
+# Note that the model needs to be manually copied to the source directory
+# TODO: Add RUN command to make sure model.tflite file exists and include build instrutions if not
+COPY files/model/model.tflite /usr/share/squirrel-away/model.tflite
+
+# Config file for python inferencing
+RUN mkdir -p /etc/squirrel-away/inferencing/config
+COPY files/config/config.ini /etc/squirrel-away/inferencing/config/
+
+# Install python squirrel detection inferencing
+COPY files/wheel/squirrel_away_detector*.whl /tmp/
+RUN python3.11 -m ensurepip && python3.11 -m pip install /tmp/squirrel_away_detector*.whl
+
+CMD ["squirrel-away-detector"]
