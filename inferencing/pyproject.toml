@@ -5,10 +5,13 @@ description = "AI-based squirrel detection"
 authors = [{ name="Greg Blomquist", email="blomquisg@gmail.com"}]
 dependencies = [
     "numpy",
-    "tensorflow-cpu",
+    "tensorflow",
     "ai-edge-litert",
 ]
 requires-python = ">=3.8"
+
+[project.scripts]
+squirrel-away-detector = "detector.inference_tflite:main"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
